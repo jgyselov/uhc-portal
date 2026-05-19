@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 import { useLocation, useParams } from 'react-router-dom';
 
-import { getAddHostsTabState } from '@openshift-assisted/ui-lib/ocm';
+import { useModule } from '@scalprum/react-core';
 import { PageSection, Spinner, TabContent, Tooltip } from '@patternfly/react-core';
 
 import { Navigate, useClusterListPath, useNavigate } from '~/common/routing';
@@ -475,9 +475,16 @@ const ClusterDetails = (props) => {
 
   const accessRequestsTabVisible = accessProtection?.enabled;
 
+  const getAddHostsTabState = useModule(
+    'assistedInstallerApp',
+    './getAddHostsTabState',
+    null,
+    'getAddHostsTabState',
+  );
+
   let addHostsTabState = { showTab: false, isDisabled: false, tabTooltip: '' };
   if (isAssistedInstallCluster(cluster) && !isArchived) {
-    addHostsTabState = getAddHostsTabState(cluster);
+    addHostsTabState = getAddHostsTabState?.(cluster) ?? addHostsTabState;
   }
 
   const findGcpOrgPolicyWarning = (logs) => {
@@ -562,7 +569,9 @@ const ClusterDetails = (props) => {
                   ref: addAssistedTabRef,
                   show: addHostsTabState.showTab,
                   isDisabled: addHostsTabState.isDisabled,
-                  tooltip: addHostsTabState.tabTooltip,
+                  tooltip: addHostsTabState.tabTooltip ? (
+                    <Tooltip content={addHostsTabState.tabTooltip} />
+                  ) : undefined,
                 },
                 [ClusterTabsId.ACCESS_REQUEST]: {
                   ref: accessRequestsTabRef,
